@@ -37,97 +37,183 @@ public class ContractService {
     private DamageItemRepository damageItemRepository;
     
     @Autowired
-    private UserRepository userRepository;
-    
-    @Transactional
+    private UserRepository userRepository;      @Transactional
     public void completeContract(Integer contractId) throws RuntimeException {
-        Optional<Contract> contractOpt = contractRepository.findById(contractId);
-        if (contractOpt.isEmpty()) {
-            throw new RuntimeException("Không tìm thấy hợp đồng");
+        if (contractId == null) {
+            throw new IllegalArgumentException("Contract ID cannot be null");
         }
         
-        Contract contract = contractOpt.get();
-        
-        // 1. Cập nhật trạng thái hợp đồng
-        contract.setStatus("COMPLETED");
-        contractRepository.save(contract);
-        
-        // 2. Cập nhật trạng thái xe
-        List<ContractCar> contractCars = contractCarRepository.findByContractId(contractId);
-        for (ContractCar contractCar : contractCars) {
-            Car car = contractCar.getCar();
-            car.setStatus("AVAILABLE");
-            carRepository.save(car);
+        try {
+            Optional<Contract> contractOpt = contractRepository.findById(contractId);
+            if (contractOpt.isEmpty()) {
+                throw new RuntimeException("Không tìm thấy hợp đồng với ID: " + contractId);
+            }
+            
+            Contract contract = contractOpt.get();
+            
+            // Check if contract is already completed
+            if ("COMPLETED".equals(contract.getStatus())) {
+                throw new RuntimeException("Hợp đồng đã được hoàn thành trước đó");
+            }
+            
+            // 1. Cập nhật trạng thái hợp đồng
+            contract.setStatus("COMPLETED");
+            contractRepository.save(contract);
+            
+            // 2. Cập nhật trạng thái xe
+            List<ContractCar> contractCars = contractCarRepository.findByContractId(contractId);
+            if (contractCars.isEmpty()) {
+                throw new RuntimeException("Không tìm thấy thông tin xe trong hợp đồng");
+            }
+            
+            for (ContractCar contractCar : contractCars) {
+                Car car = contractCar.getCar();
+                if (car == null) {
+                    throw new RuntimeException("Lỗi: Thông tin xe bị thiếu trong hợp đồng");
+                }
+                car.setStatus("AVAILABLE");
+                carRepository.save(car);
+            }
+            
+            // 3. Cập nhật trạng thái tài sản thế chấp
+            List<Collateral> collaterals = collateralRepository.findByContractId(contractId);
+            for (Collateral collateral : collaterals) {
+                collateral.setReturnStatus("RETURNED");
+                collateralRepository.save(collateral);
+            }
+            
+            // 4. Tạo hóa đơn mới
+            createInvoice(contract, contractCars);
+        } catch (Exception e) {
+            // Log the error for diagnosis
+            System.err.println("Error completing contract " + contractId + ": " + e.getMessage());
+            e.printStackTrace();
+            
+            // Rethrow with a user-friendly message
+            throw new RuntimeException("Lỗi xử lý thanh toán: " + e.getMessage(), e);
         }
-        
-        // 3. Cập nhật trạng thái tài sản thế chấp
-        List<Collateral> collaterals = collateralRepository.findByContractId(contractId);
-        for (Collateral collateral : collaterals) {
-            collateral.setReturnStatus("RETURNED");
-            collateralRepository.save(collateral);
-        }
-        
-        // 4. Tạo hóa đơn mới
-        createInvoice(contract, contractCars);
     }
     
     private void createInvoice(Contract contract, List<ContractCar> contractCars) {
-        // Lấy thông tin người dùng đăng nhập hiện tại
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        User currentUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        // Tạo invoice mới
-        Invoice invoice = new Invoice();
-        invoice.setInvoiceDate((int)(new Date().getTime() / 1000)); // Unix timestamp
-        invoice.setPaymentMethod("CASH"); // Mặc định là tiền mặt
-        invoice.setStatus("PAID");
-        invoice.setInvoiceType("LEASE_END");
-        invoice.setPaymentDate(new Date().toString());
-        invoice.setDiscountAmount(0f);
-        invoice.setUser(currentUser);
-        invoice.setContract(contract);
-        
-        // Tính toán tổng tiền
-        float totalAmount = 0;
-        
-        // Lưu invoice
-        Invoice savedInvoice = invoiceRepository.save(invoice);
-        
-        // Tạo invoice detail cho từng xe
-        for (ContractCar contractCar : contractCars) {
-            // Phí thuê xe
-            float rentalFee = contractCar.getPricePerDay() * contractCar.getEndDate();
-            InvoiceDetail rentalDetail = new InvoiceDetail();
-            rentalDetail.setFeeType("RENTAL_FEE");
-            rentalDetail.setFeeAmount(rentalFee);
-            rentalDetail.setDescription("Phí thuê xe " + contractCar.getCar().getLicensePlate());
-            rentalDetail.setDiscount(0f);
-            rentalDetail.setContractCar(contractCar);
-            rentalDetail.setInvoice(savedInvoice);
-            invoiceDetailRepository.save(rentalDetail);
-            
-            totalAmount += rentalFee;
-            
-            // Phí hư hỏng nếu có
-            List<DamageItem> damages = damageItemRepository.findByContractCarId(contractCar.getId());
-            for (DamageItem damage : damages) {
-                InvoiceDetail damageDetail = new InvoiceDetail();
-                damageDetail.setFeeType("DAMAGE_FEE");
-                damageDetail.setFeeAmount(damage.getRepairCostEstimate());
-                damageDetail.setDescription("Phí sửa chữa: " + damage.getDescription());
-                damageDetail.setDiscount(0f);
-                damageDetail.setContractCar(contractCar);
-                damageDetail.setInvoice(savedInvoice);
-                invoiceDetailRepository.save(damageDetail);
-                
-                totalAmount += damage.getRepairCostEstimate();
-            }
+        if (contract == null) {
+            throw new IllegalArgumentException("Contract cannot be null");
         }
         
-        // Cập nhật tổng tiền
-        savedInvoice.setAmountPaid(totalAmount);
-        invoiceRepository.save(savedInvoice);
+        if (contractCars == null || contractCars.isEmpty()) {
+            throw new IllegalArgumentException("No contract cars provided");
+        }
+        
+        try {
+            // Lấy thông tin người dùng đăng nhập hiện tại
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String username = auth.getName();
+            User currentUser = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Tạo invoice mới
+            Invoice invoice = new Invoice();
+            invoice.setInvoiceDate((int)(new Date().getTime() / 1000)); // Unix timestamp
+            invoice.setPaymentMethod("CASH"); // Mặc định là tiền mặt
+            invoice.setStatus("PAID");
+            invoice.setInvoiceType("LEASE_END");
+            
+            // Format payment date to fit within 25 characters - using a shorter format
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
+                String formattedDate = sdf.format(new Date());
+                
+                // Validate that the formatted date string is within column length constraints (25 chars)
+                if (formattedDate.length() > 25) {
+                    // If still too long, use even shorter format
+                    sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                    formattedDate = sdf.format(new Date());
+                }
+                
+                invoice.setPaymentDate(formattedDate);
+            } catch (Exception e) {
+                // Fallback to a safe string if any date formatting error occurs
+                invoice.setPaymentDate(new Date().toString().substring(0, 25));
+                System.err.println("Warning: Error formatting payment date: " + e.getMessage());
+            }
+            
+            invoice.setDiscountAmount(0f);
+            invoice.setUser(currentUser);
+            invoice.setContract(contract);
+            
+            // Tính toán tổng tiền
+            float totalAmount = 0;
+            
+            // Lưu invoice
+            Invoice savedInvoice = invoiceRepository.save(invoice);
+            
+            // Tạo invoice detail cho từng xe
+            for (ContractCar contractCar : contractCars) {
+                if (contractCar == null) {
+                    System.err.println("Warning: Null contract car found in collection, skipping");
+                    continue;
+                }
+                
+                try {
+                    // Ensure we have valid price and days data
+                    float pricePerDay = contractCar.getPricePerDay() != null ? contractCar.getPricePerDay() : 0;
+                    int days = contractCar.getEndDate() != null ? contractCar.getEndDate() : 0;
+                    
+                    // Phí thuê xe
+                    float rentalFee = pricePerDay * days;
+                    
+                    InvoiceDetail rentalDetail = new InvoiceDetail();
+                    rentalDetail.setFeeType("RENTAL_FEE");
+                    rentalDetail.setFeeAmount(rentalFee);
+                    
+                    // Get license plate safely
+                    String licensePlate = "Unknown";
+                    if (contractCar.getCar() != null && contractCar.getCar().getLicensePlate() != null) {
+                        licensePlate = contractCar.getCar().getLicensePlate();
+                    }
+                    
+                    rentalDetail.setDescription("Phí thuê xe " + licensePlate);
+                    rentalDetail.setDiscount(0f);
+                    rentalDetail.setContractCar(contractCar);
+                    rentalDetail.setInvoice(savedInvoice);
+                    invoiceDetailRepository.save(rentalDetail);
+                    
+                    totalAmount += rentalFee;
+                    
+                    // Phí hư hỏng nếu có
+                    List<DamageItem> damages = damageItemRepository.findByContractCarId(contractCar.getId());
+                    if (damages != null) {
+                        for (DamageItem damage : damages) {
+                            if (damage == null) continue;
+                            
+                            float repairCost = damage.getRepairCostEstimate() != null ? damage.getRepairCostEstimate() : 0;
+                            
+                            InvoiceDetail damageDetail = new InvoiceDetail();
+                            damageDetail.setFeeType("DAMAGE_FEE");
+                            damageDetail.setFeeAmount(repairCost);
+                            
+
+                            damageDetail.setDescription("Phí sửa chữa: " + (damage.getDescription() != null ? damage.getDescription() : ""));
+                            damageDetail.setDiscount(0f);
+                            damageDetail.setContractCar(contractCar);
+                            damageDetail.setInvoice(savedInvoice);
+                            invoiceDetailRepository.save(damageDetail);
+                            
+                            totalAmount += repairCost;
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error processing contract car " + contractCar.getId() + ": " + e.getMessage());
+                    // Continue processing other cars instead of failing completely
+                }
+            }
+            
+            // Cập nhật tổng tiền
+            savedInvoice.setAmountPaid(totalAmount);
+            invoiceRepository.save(savedInvoice);
+        } catch (Exception e) {
+            System.err.println("Error creating invoice: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi tạo hóa đơn: " + e.getMessage(), e);
+        }
     }
 }
