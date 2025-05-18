@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Car Rental System</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .dashboard-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            min-height: calc(100vh - 140px);
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+        .sidebar h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+        }
+        .sidebar a:hover {
+            color: #4CAF50;
+        }
+        .welcome-box {
+            background-color: #f9f9f9;
+            border-left: 5px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .admin-badge {
+            background-color: #ff5722;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Car Rental System</h1>
+                </div>
+                <div class="nav-links">
+                    <a th:href="@{/}">Home</a>
+                    <a th:href="@{/dashboard}">Dashboard</a>
+                    <a th:href="@{/admin}">Admin Panel</a>
+                    <a th:href="@{/logout}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-container">
+            <div class="sidebar">
+                <h3>Admin Menu</h3>
+                <ul>
+                    <li><a th:href="@{/admin/users}">User Management</a></li>
+                    <li><a th:href="@{/management/cars}">Car Management</a></li>
+                    <li><a th:href="@{/management/customers}">Customer Management</a></li>
+                    <li><a th:href="@{/management/contracts}">Contract Management</a></li>
+                    <li><a th:href="@{/admin/reports}">Reports</a></li>
+                    <li><a th:href="@{/admin/settings}">System Settings</a></li>
+                </ul>
+            </div>
+            <div class="main-content">
+                <div class="welcome-box">
+                    <h2>Welcome, Administrator!</h2>
+                    <p>You are logged in with <span class="admin-badge">ADMIN</span> privileges.</p>
+                </div>
+                
+                <h2>System Overview</h2>
+                
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <h3>System Statistics</h3>
+                        <p>Total Users: 5</p>
+                        <p>Active Sessions: 2</p>
+                        <p>System Uptime: 15 days</p>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <h3>Today's Activity</h3>
+                        <p>New Contracts: 3</p>
+                        <p>Cars Returned: 2</p>
+                        <p>New Customers: 4</p>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <h3>Quick Actions</h3>
+                        <p><a href="#" class="btn">Add New User</a></p>
+                        <p><a href="#" class="btn">System Backup</a></p>
+                        <p><a href="#" class="btn">View Logs</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

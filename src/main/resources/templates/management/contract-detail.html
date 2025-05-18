@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi Tiết Hợp Đồng - Car Rental System</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .dashboard-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            min-height: calc(100vh - 140px);
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+        .sidebar h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+        }
+        .sidebar a:hover {
+            color: #4CAF50;
+        }
+        
+        .contract-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+        
+        .contract-header h2 {
+            margin: 0;
+        }
+        
+        .contract-header .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .section-header {
+            background-color: #f4f4f4;
+            padding: 10px 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 5px solid #4CAF50;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .info-item {
+            margin-bottom: 10px;
+        }
+        
+        .info-item .label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .table-container {
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            color: white;
+        }
+        
+        .status-active {
+            background-color: #4CAF50;
+        }
+        
+        .status-completed {
+            background-color: #2196F3;
+        }
+        
+        .status-cancelled {
+            background-color: #f44336;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 60%;
+            max-width: 600px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+        }
+        
+        .damage-list {
+            margin-top: 20px;
+        }
+        
+        .damage-item {
+            background-color: #f9f9f9;
+            border-left: 3px solid #ff9800;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+        }
+        
+        .damage-item .damage-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .damage-item .damage-cost {
+            font-weight: bold;
+            color: #ff5722;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Car Rental System</h1>
+                </div>
+                <div class="nav-links">
+                    <a th:href="@{/}">Home</a>
+                    <a th:href="@{/dashboard}">Dashboard</a>
+                    <div sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin}">Admin Panel</a>
+                    </div>
+                    <a th:href="@{/logout}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-container">
+            <div class="sidebar">
+                <h3>Management Menu</h3>
+                <ul>
+                    <li><a th:href="@{/management/cars}">Car Management</a></li>
+                    <li><a th:href="@{/management/customers}">Customer Management</a></li>
+                    <li><a th:href="@{/management/contracts}" class="active">Contract Management</a></li>
+                    <li><a th:href="@{/dashboard}">Back to Dashboard</a></li>
+                </ul>
+            </div>
+            
+            <div class="main-content">
+                <!-- Thông báo thành công -->
+                <div th:if="${successMessage}" class="alert alert-success" style="background-color: #d4edda; color: #155724; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                    <span th:text="${successMessage}"></span>
+                </div>
+                
+                <div class="contract-header">
+                    <h2>Chi Tiết Hợp Đồng #<span th:text="${contract.id}">1</span></h2>
+                    <div class="actions">
+                        <a th:href="@{/management/contracts}" class="btn">Quay Lại</a>
+                        <a th:href="@{/management/contracts/invoice/{id}(id=${contract.id})}" class="btn">Tạo Hóa Đơn</a>
+                    </div>
+                </div>
+                
+                <!-- Thông tin cơ bản hợp đồng -->
+                <div class="section-header">
+                    <h3>Thông Tin Hợp Đồng</h3>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="label">Mã Hợp Đồng:</div>
+                        <div th:text="${contract.id}">HD001</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Ngày Lập:</div>
+                        <div th:text="${#dates.format(contract.contractDate, 'dd/MM/yyyy')}">01/05/2025</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Trạng Thái:</div>
+                        <div>
+                            <span th:if="${contract.status == 'ACTIVE'}" class="status-badge status-active" th:text="${contract.status}">ACTIVE</span>
+                            <span th:if="${contract.status == 'COMPLETED'}" class="status-badge status-completed" th:text="${contract.status}">COMPLETED</span>
+                            <span th:if="${contract.status == 'CANCELLED'}" class="status-badge status-cancelled" th:text="${contract.status}">CANCELLED</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Thông tin khách hàng -->
+                <div class="section-header">
+                    <h3>Thông Tin Khách Hàng</h3>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="label">Họ Tên:</div>
+                        <div th:text="${contract.customer.fullname}">John Doe</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Email:</div>
+                        <div th:text="${contract.customer.email}">john@example.com</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Số Điện Thoại:</div>
+                        <div th:text="${contract.customer.phone}">0123456789</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Địa Chỉ:</div>
+                        <div th:text="${contract.customer.address}">123 Street, City</div>
+                    </div>
+                </div>
+                
+                <!-- Thông tin tài sản thế chấp -->
+                <div class="section-header">
+                    <h3>Tài Sản Thế Chấp</h3>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Loại</th>
+                                <th>Giá Trị</th>
+                                <th>Mô Tả</th>
+                                <th>Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="collateral : ${contract.collaterals}">
+                                <td th:text="${collateral.type}">CMND</td>
+                                <td th:text="${collateral.value}">1000000</td>
+                                <td th:text="${collateral.description}">CMND số 123456789</td>
+                                <td th:text="${collateral.returnStatus}">NOT_RETURNED</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(contract.collaterals)}">
+                                <td colspan="4" style="text-align: center;">Không có tài sản thế chấp</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Thông tin xe thuê -->
+                <div class="section-header">
+                    <h3>Thông Tin Xe Thuê</h3>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Biển Số</th>
+                                <th>Hãng</th>
+                                <th>Model</th>
+                                <th>Ngày Bắt Đầu</th>
+                                <th>Số Ngày Thuê</th>
+                                <th>Giá/Ngày</th>
+                                <th>Trạng Thái</th>
+                                <th>Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="contractCar : ${contractCars}">
+                                <td th:text="${contractCar.car.licensePlate}">30A-12345</td>
+                                <td th:text="${contractCar.car.brand}">Toyota</td>
+                                <td th:text="${contractCar.car.model}">Camry</td>
+                                <td th:text="${#dates.format(contractCar.startDate, 'dd/MM/yyyy')}">01/05/2025</td>
+                                <td th:text="${contractCar.endDate}">7</td>
+                                <td th:text="${contractCar.pricePerDay}">500000</td>                                <td th:text="${contractCar.car.status}">RENTED</td>                                <td>
+                                    <button class="btn damage-btn" 
+                                            th:data-contract-car-id="${contractCar.id}" 
+                                            th:data-car-id="${contractCar.car.id}"
+                                            th:data-license="${contractCar.car.licensePlate}" 
+                                            style="padding: 5px 10px; font-size: 14px;">Thêm Hư Hỏng</button>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(contractCars)}">
+                                <td colspan="8" style="text-align: center;">Không có xe trong hợp đồng này</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Danh sách hư hỏng -->
+                <div class="section-header">
+                    <h3>Danh Sách Hư Hỏng</h3>
+                </div>
+                
+                <div class="damage-list">
+                    <div th:each="contractCar : ${contractCars}" th:if="${not #lists.isEmpty(contractCar.damageItems)}">
+                        <h4 th:text="${contractCar.car.brand + ' ' + contractCar.car.model + ' (' + contractCar.car.licensePlate + ')'}">Toyota Camry (30A-12345)</h4>
+                        
+                        <div class="damage-item" th:each="damage : ${contractCar.damageItems}">
+                            <div class="damage-header">
+                                <strong th:text="${damage.description}">Trầy xước cửa</strong>
+                                <span class="damage-cost" th:text="${damage.repairCostEstimate + ' VND'}">500000 VND</span>
+                            </div>
+                            <div th:if="${damage.image != null && !damage.image.isEmpty()}">
+                                <img th:src="@{'/uploads/' + ${damage.image}}" alt="Damage Image" style="max-width: 200px; margin-top: 5px;">
+                            </div>
+                        </div>                    </div>
+                    
+                    <div th:if="${#lists.isEmpty(contractCars) || contractCars.?[!#lists.isEmpty(damageItems)].size() == 0}">
+                        <p>Không có hư hỏng nào được ghi nhận</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Thêm Hư Hỏng -->
+    <div id="damageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Thêm Hư Hỏng</h3>
+                <span class="close" onclick="closeDamageModal()">&times;</span>
+            </div>            <form th:action="@{/management/contracts/damage/add}" method="post" enctype="multipart/form-data">
+                <input type="hidden" id="contractCarId" name="contractCar.id">
+                <input type="hidden" id="carId" name="car.id">
+                <input type="hidden" id="damageReportId" name="damageReportId" value="1">
+                <input type="hidden" id="imageDefault" name="image" value="noimage">
+                
+                <div class="form-group">
+                    <label for="carInfo">Xe:</label>
+                    <input type="text" id="carInfo" class="form-control" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Mô Tả Hư Hỏng:</label>
+                    <textarea id="description" name="description" class="form-control" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="repairCostEstimate">Chi Phí Ước Tính:</label>
+                    <input type="number" id="repairCostEstimate" name="repairCostEstimate" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="image">Hình Ảnh:</label>
+                    <input type="file" id="image" name="imageFile" class="form-control">
+                </div>
+                
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn" onclick="closeDamageModal()" style="background-color: #ccc; margin-right: 10px;">Hủy</button>
+                    <button type="submit" class="btn">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>        // Modal functions
+        function openDamageModal(contractCarId, carId, licensePlate) {
+            document.getElementById('contractCarId').value = contractCarId;
+            document.getElementById('carId').value = carId;
+            document.getElementById('carInfo').value = licensePlate;
+            document.getElementById('damageModal').style.display = 'block';
+        }
+        
+        function closeDamageModal() {
+            document.getElementById('damageModal').style.display = 'none';
+            document.getElementById('description').value = '';
+            document.getElementById('repairCostEstimate').value = '';
+            document.getElementById('image').value = '';
+        }
+          // Close modal when clicking outside
+        window.onclick = function(event) {
+            var modal = document.getElementById('damageModal');
+            if (event.target == modal) {
+                closeDamageModal();
+            }
+        }
+          // Add event listeners to damage buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            var damageButtons = document.querySelectorAll('.damage-btn');
+            damageButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var contractCarId = this.getAttribute('data-contract-car-id');
+                    var carId = this.getAttribute('data-car-id');
+                    var licensePlate = this.getAttribute('data-license');
+                    openDamageModal(contractCarId, carId, licensePlate);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

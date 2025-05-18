@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Car Rental System</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .dashboard-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            min-height: calc(100vh - 140px);
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+        .sidebar h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+        }
+        .sidebar a:hover {
+            color: #4CAF50;
+        }
+        .welcome-box {
+            background-color: #f9f9f9;
+            border-left: 5px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-box {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .stat-box h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Car Rental System</h1>
+                </div>
+                <div class="nav-links">
+                    <a th:href="@{/}">Home</a>
+                    <a th:href="@{/dashboard}">Dashboard</a>
+                    <a th:href="@{/logout}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-container">            <div class="sidebar">
+                <h3>Dashboard Menu</h3>
+                <ul>
+                    <li><a th:href="@{/management/cars}">Cars</a></li>
+                    <li><a th:href="@{/management/customers}">Customers</a></li>
+                    <li><a th:href="@{/management/contracts}">Contracts</a></li>
+                    <li><a href="#">Invoices</a></li>
+                    <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/users}">Users</a></li>
+                    <li><a href="#">Reports</a></li>
+                    <li><a href="#">Settings</a></li>
+                </ul>
+            </div>
+            <div class="main-content">
+                <div class="welcome-box">
+                    <h2>Welcome, <span th:text="${username}"></span>!</h2>
+                    <p>You are logged in as <span sec:authentication="principal.authorities"></span></p>
+                </div>
+                
+                <h2>Dashboard Overview</h2>
+                  <div class="stats-container">
+                    <div class="stat-box">
+                        <h3>Cars</h3>
+                        <p>Total Cars: 24</p>
+                        <p>Available: 15</p>
+                        <p>Rented: 9</p>
+                        <a th:href="@{/management/cars}" class="btn">Manage Cars</a>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <h3>Contracts</h3>
+                        <p>Active Contracts: 9</p>
+                        <p>Pending Return: 3</p>
+                        <p>Total: 125</p>
+                        <a th:href="@{/management/contracts}" class="btn">View Contracts</a>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <h3>Customers</h3>
+                        <p>Total Customers: 87</p>
+                        <p>New This Month: 12</p>
+                        <a th:href="@{/management/customers}" class="btn">Manage Customers</a>
+                    </div>
+                </div>
+                
+                <h2>Recent Activities</h2>
+                <p>This is where you can show recent system activities, notifications, or alerts.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

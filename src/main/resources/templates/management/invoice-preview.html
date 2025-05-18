@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Xem Trước Hóa Đơn - Car Rental System</title>    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .dashboard-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            min-height: calc(100vh - 140px);
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+        .sidebar h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+        }
+        .sidebar a:hover {
+            color: #4CAF50;
+        }
+        
+        .invoice-container {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .invoice-title {
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .invoice-details {
+            margin-bottom: 30px;
+        }
+        
+        .invoice-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .detail-group {
+            margin-bottom: 10px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .detail-value {
+            font-size: 16px;
+        }
+        
+        .line-items {
+            margin-bottom: 30px;
+        }
+        
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .invoice-table th, .invoice-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .invoice-table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .invoice-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .totals {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-bottom: 30px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .total-label {
+            font-weight: bold;
+            width: 150px;
+            text-align: right;
+            padding-right: 20px;
+        }
+        
+        .total-value {
+            width: 150px;
+            text-align: right;
+            font-weight: normal;
+        }
+        
+        .grand-total {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .grand-total .total-value {
+            font-weight: bold;
+        }
+        
+        .invoice-footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            text-align: center;
+        }
+        
+        .invoice-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn-print {
+            background-color: #2196F3;
+        }
+        
+        .btn-print:hover {
+            background-color: #0b7dda;
+        }
+        
+        .btn-confirm {
+            background-color: #4CAF50;
+        }
+        
+        .btn-confirm:hover {
+            background-color: #45a049;
+        }
+        
+        .btn-cancel {
+            background-color: #f44336;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #d32f2f;
+        }
+        
+        .section-title {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            margin-top: 30px;
+            color: #333;
+        }
+        
+        @media print {
+            .sidebar, header, .invoice-actions, .nav-links {
+                display: none !important;
+            }
+            
+            .dashboard-container {
+                display: block !important;
+            }
+            
+            .main-content {
+                width: 100% !important;
+                padding: 0 !important;
+            }
+            
+            .invoice-container {
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Car Rental System</h1>
+                </div>
+                <div class="nav-links">
+                    <a th:href="@{/}">Home</a>
+                    <a th:href="@{/dashboard}">Dashboard</a>
+                    <div sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin}">Admin Panel</a>
+                    </div>
+                    <a th:href="@{/logout}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-container">
+            <div class="sidebar">
+                <h3>Management Menu</h3>
+                <ul>
+                    <li><a th:href="@{/management/cars}">Car Management</a></li>
+                    <li><a th:href="@{/management/customers}">Customer Management</a></li>
+                    <li><a th:href="@{/management/contracts}" class="active">Contract Management</a></li>
+                    <li><a th:href="@{/dashboard}">Back to Dashboard</a></li>
+                </ul>
+            </div>
+            
+            <div class="main-content">
+                <!-- Thông báo lỗi nếu có -->
+                <div th:if="${errorMessage}" class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                    <span th:text="${errorMessage}"></span>
+                </div>
+                
+                <div class="invoice-container">
+                    <div class="invoice-header">
+                        <div>
+                            <h2 class="invoice-title">HÓA ĐƠN THANH LÝ HỢP ĐỒNG</h2>
+                            <p>Car Rental System</p>
+                        </div>
+                        <div>
+                            <p><strong>Ngày lập:</strong> <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy')}">18/05/2025</span></p>
+                            <p><strong>Mã hóa đơn:</strong> <span>HD-</span><span th:text="${contract.id}">1</span></p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title">Thông Tin Khách Hàng</h3>
+                    <div class="invoice-details">
+                        <div class="invoice-details-grid">
+                            <div class="detail-group">
+                                <div class="detail-label">Khách hàng:</div>
+                                <div class="detail-value" th:text="${contract.customer.fullname}">John Doe</div>
+                            </div>
+                            <div class="detail-group">
+                                <div class="detail-label">Địa chỉ:</div>
+                                <div class="detail-value" th:text="${contract.customer.address}">123 Street, City</div>
+                            </div>
+                            <div class="detail-group">
+                                <div class="detail-label">Số điện thoại:</div>
+                                <div class="detail-value" th:text="${contract.customer.phone}">0123456789</div>
+                            </div>
+                            <div class="detail-group">
+                                <div class="detail-label">Email:</div>
+                                <div class="detail-value" th:text="${contract.customer.email}">john@example.com</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title">Thông Tin Hợp Đồng</h3>
+                    <div class="invoice-details">
+                        <div class="invoice-details-grid">
+                            <div class="detail-group">
+                                <div class="detail-label">Mã hợp đồng:</div>
+                                <div class="detail-value" th:text="${contract.id}">HD001</div>
+                            </div>
+                            <div class="detail-group">
+                                <div class="detail-label">Ngày lập hợp đồng:</div>
+                                <div class="detail-value" th:text="${#dates.format(contract.contractDate, 'dd/MM/yyyy')}">01/05/2025</div>
+                            </div>
+                            <div class="detail-group">
+                                <div class="detail-label">Trạng thái hợp đồng:</div>
+                                <div class="detail-value" th:text="${contract.status}">ACTIVE</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title">Chi Phí Thuê Xe</h3>
+                    <div class="line-items">
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>Biển Số</th>
+                                    <th>Xe</th>
+                                    <th>Ngày Bắt Đầu</th>
+                                    <th>Số Ngày Thuê</th>
+                                    <th>Giá/Ngày</th>
+                                    <th class="text-right">Thành Tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="contractCar : ${contractCars}">
+                                    <td th:text="${contractCar.car.licensePlate}">30A-12345</td>
+                                    <td th:text="${contractCar.car.brand + ' ' + contractCar.car.model}">Toyota Camry</td>
+                                    <td th:text="${#dates.format(contractCar.startDate, 'dd/MM/yyyy')}">01/05/2025</td>
+                                    <td th:text="${contractCar.endDate}">7</td>
+                                    <td th:text="${#numbers.formatDecimal(contractCar.pricePerDay, 0, 'POINT', 0, 'COMMA') + ' VND'}">500,000 VND</td>
+                                    <td class="text-right" 
+                                        th:text="${#numbers.formatDecimal(contractCar.pricePerDay * contractCar.endDate, 0, 'POINT', 0, 'COMMA') + ' VND'}">
+                                        3,500,000 VND
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3 class="section-title">Chi Phí Hư Hỏng (nếu có)</h3>
+                    <div class="line-items">
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>Xe</th>
+                                    <th>Mô Tả Hư Hỏng</th>
+                                    <th class="text-right">Chi Phí Sửa Chữa</th>                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Loop through contract cars with damage items -->
+                                <tr th:each="contractCar : ${contractCars}" th:if="${not #lists.isEmpty(contractCar.damageItems)}">
+                                    <td colspan="3">
+                                        <!-- Nested table for damage items -->
+                                        <table style="width: 100%">
+                                            <tr th:each="damage : ${contractCar.damageItems}">
+                                                <td th:text="${contractCar.car.licensePlate}" style="width: 33%">30A-12345</td>
+                                                <td th:text="${damage.description}" style="width: 33%">Trầy xước cửa</td>
+                                                <td class="text-right" style="width: 33%"
+                                                    th:text="${#numbers.formatDecimal(damage.repairCostEstimate, 0, 'POINT', 0, 'COMMA') + ' VND'}">
+                                                    500,000 VND                                                </td>                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr><!-- Show "no damage" row only if there are no contract cars or none have damages -->
+                                <tr th:if="${damageTotal == 0}">
+                                    <td colspan="3" style="text-align: center;">Không có hư hỏng nào được ghi nhận</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="totals">
+                        <div class="total-row">
+                            <div class="total-label">Tổng phí thuê xe:</div>
+                            <div class="total-value" th:text="${#numbers.formatDecimal(rentalTotal, 0, 'POINT', 0, 'COMMA') + ' VND'}">3,500,000 VND</div>
+                        </div>
+                        <div class="total-row">
+                            <div class="total-label">Tổng phí hư hỏng:</div>
+                            <div class="total-value" th:text="${#numbers.formatDecimal(damageTotal, 0, 'POINT', 0, 'COMMA') + ' VND'}">500,000 VND</div>
+                        </div>
+                        <div class="total-row grand-total">
+                            <div class="total-label">Tổng cộng:</div>
+                            <div class="total-value" th:text="${#numbers.formatDecimal(total, 0, 'POINT', 0, 'COMMA') + ' VND'}">4,000,000 VND</div>
+                        </div>
+                    </div>
+                    
+                    <div class="invoice-footer">
+                        <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
+                    </div>
+                </div>
+                
+                <div class="invoice-actions">
+                    <button class="btn btn-print" onclick="window.print()">In Hóa Đơn</button>
+                    <a th:href="@{/management/contracts/view/{id}(id=${contract.id})}" class="btn btn-cancel">Quay Lại</a>
+                    <form th:action="@{/management/contracts/invoice/confirm/{id}(id=${contract.id})}" method="post" style="display: inline-block;">
+                        <button type="submit" class="btn btn-confirm">Xác Nhận Thanh Toán</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - Car Rental System</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .hero {
+            background-color: #f4f4f4;
+            padding: 50px 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Car Rental System</h1>
+                </div>
+                <div class="nav-links">
+                    <a th:href="@{/}">Home</a>
+                    <div sec:authorize="isAuthenticated()">
+                        <a th:href="@{/dashboard}">Dashboard</a>
+                        <a th:href="@{/logout}">Logout</a>
+                    </div>
+                    <div sec:authorize="!isAuthenticated()">
+                        <a th:href="@{/login}">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Welcome to the Car Rental System</h2>
+            <p>The best platform for renting cars at affordable prices.</p>
+            <div sec:authorize="!isAuthenticated()">
+                <a th:href="@{/login}" class="btn">Login Now</a>
+            </div>
+            <div sec:authorize="isAuthenticated()">
+                <a th:href="@{/dashboard}" class="btn">Go to Dashboard</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="container">
+        <h2>Our Services</h2>
+        <p>
+            We provide high-quality car rental services with a wide range of vehicles to choose from.
+            Our goal is to make car rental as simple and accessible as possible.
+        </p>
+    </section>
+</body>
+</html>

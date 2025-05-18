@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Contract Management - Car Rental System</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .dashboard-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            min-height: calc(100vh - 140px);
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+        .sidebar h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+        }
+        .sidebar a:hover {
+            color: #4CAF50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        .action-buttons a {
+            margin-right: 10px;
+            text-decoration: none;
+        }
+        .status-active {
+            background-color: #4CAF50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+        .status-completed {
+            background-color: #2196F3;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+        .status-cancelled {
+            background-color: #f44336;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+        .add-contract-btn {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Car Rental System</h1>
+                </div>
+                <div class="nav-links">
+                    <a th:href="@{/}">Home</a>
+                    <a th:href="@{/dashboard}">Dashboard</a>
+                    <div sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin}">Admin Panel</a>
+                    </div>
+                    <a th:href="@{/logout}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-container">
+            <div class="sidebar">
+                <h3>Management Menu</h3>
+                <ul>
+                    <li><a th:href="@{/management/cars}">Car Management</a></li>
+                    <li><a th:href="@{/management/customers}">Customer Management</a></li>
+                    <li><a th:href="@{/management/contracts}" class="active">Contract Management</a></li>
+                    <li><a th:href="@{/dashboard}">Back to Dashboard</a></li>
+                </ul>
+            </div>            <div class="main-content">
+                <h2>Contract Management</h2>
+                <p>Create, view, update, and manage rental contracts</p>
+                
+                <div class="search-container" style="margin-bottom: 20px;">
+                    <form th:action="@{/management/contracts}" method="get" class="search-form" style="display: flex; gap: 10px;">
+                        <div style="flex: 1;">
+                            <input type="number" name="searchId" placeholder="Nhập ID hợp đồng để tìm kiếm..." 
+                                   class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <button type="submit" class="btn" style="white-space: nowrap;">Tìm Kiếm</button>
+                    </form>
+                    <div th:if="${searchError}" class="error-message" style="color: red; margin-top: 5px;" th:text="${searchError}"></div>
+                    <div th:if="${successMessage}" class="success-message" style="color: green; margin-top: 5px;" th:text="${successMessage}"></div>
+                </div>
+                
+                <div class="add-contract-btn">
+                    <a href="#" class="btn">Create New Contract</a>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Contract Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="contract : ${contracts}">
+                            <td th:text="${contract.id}">1</td>
+                            <td th:text="${contract.customer.fullname}">John Doe</td>
+                            <td th:text="${#dates.format(contract.contractDate, 'dd-MM-yyyy')}">01-05-2025</td>
+                            <td>
+                                <span th:if="${contract.status == 'ACTIVE'}" class="status-active" th:text="${contract.status}">ACTIVE</span>
+                                <span th:if="${contract.status == 'COMPLETED'}" class="status-completed" th:text="${contract.status}">COMPLETED</span>
+                                <span th:if="${contract.status == 'CANCELLED'}" class="status-cancelled" th:text="${contract.status}">CANCELLED</span>
+                            </td>
+                            <td class="action-buttons">
+                                <a th:href="@{/management/contracts/edit/{id}(id=${contract.id})}" class="btn">Edit</a>
+                                <a th:href="@{/management/contracts/view/{id}(id=${contract.id})}" class="btn">View Details</a>
+                                <a th:href="@{/management/contracts/invoice/{id}(id=${contract.id})}" class="btn">Generate Invoice</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
