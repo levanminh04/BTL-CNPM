@@ -13,6 +13,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Optional;
 
+
+// sai windform, sai csdl (invvoice gắn với contractCar không phải contract), sai damage, cần có 1 thực thể damage với các lỗi sẵn có, cần mô tả trường hợp trả trước 1 xe
+
+
 @Controller
 @RequestMapping("/management")
 public class ManagementController {
@@ -80,29 +84,28 @@ public class ManagementController {
         model.addAttribute("damageItem", new DamageItem());
         
         return "management/contract-detail";
-    }      @PostMapping("/contracts/damage/add")
+    }
+
+    @PostMapping("/contracts/damage/add")
     public String addDamage(@ModelAttribute DamageItem damageItem, 
                           @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                           RedirectAttributes redirectAttributes) {
         try {
-            // Set a default image value if none is provided
             if (imageFile == null || imageFile.isEmpty()) {
                 damageItem.setImage("noimage");
             } else {
-                // Handle image file
                 String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
-                // Save the file to uploads folder - simplified for now
                 damageItem.setImage(fileName.substring(0, Math.min(fileName.length(), 10)));
             }
             
-            // Fetch the car from the repository to ensure we have a valid entity
+
             if (damageItem.getCar() != null && damageItem.getCar().getId() != null) {
                 Car car = carRepository.findById(damageItem.getCar().getId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy xe"));
                 damageItem.setCar(car);
             }
             
-            // Same for contractCar
+
             if (damageItem.getContractCar() != null && damageItem.getContractCar().getId() != null) {
                 ContractCar contractCar = contractCarRepository.findById(damageItem.getContractCar().getId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin xe trong hợp đồng"));
@@ -129,11 +132,10 @@ public class ManagementController {
         // Tính toán chi phí
         double rentalTotal = 0;
         double damageTotal = 0;
-        
-        // Pre-load damage items for each contract car
+          // Pre-load damage items for each contract car
         for (ContractCar contractCar : contractCars) {
-            // Tính phí thuê xe
-            rentalTotal += contractCar.getPricePerDay() * contractCar.getEndDate();
+            // Tính phí thuê xe sử dụng số ngày thuê (endDate - startDate)
+            rentalTotal += contractCar.getPricePerDay() * contractCar.getRentalDays();
             
             // Tính phí hư hỏng nếu có
             List<DamageItem> damages = damageItemRepository.findByContractCarId(contractCar.getId());

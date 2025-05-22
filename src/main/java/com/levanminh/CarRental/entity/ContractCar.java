@@ -18,13 +18,13 @@ public class ContractCar {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
     private Integer id;
-    
-    @Column(name = "startDate", nullable = false)
+      @Column(name = "startDate", nullable = false)
     @Temporal(TemporalType.DATE)
     private Date startDate;
     
     @Column(name = "endDate", nullable = false)
-    private Integer endDate;
+    @Temporal(TemporalType.DATE)
+    private Date endDate;
     
     @Column(name = "pricePerDay", nullable = false)
     private Float pricePerDay;
@@ -49,7 +49,25 @@ public class ContractCar {
     
     @OneToMany(mappedBy = "contractCar")
     private List<InvoiceDetail> invoiceDetails;
-    
-    @OneToMany(mappedBy = "contractCar")
+      @OneToMany(mappedBy = "contractCar")
     private List<DamageItem> damageItems;
+    
+    /**
+     * Tính số ngày thuê xe từ startDate đến endDate
+     * @return số ngày thuê, tối thiểu là 1 ngày
+     */
+    @Transient
+    public int getRentalDays() {
+        if (startDate == null || endDate == null) {
+            return 0;
+        }
+        
+        // Tính số mili giây giữa hai ngày
+        long diffInMillies = Math.abs(endDate.getTime() - startDate.getTime());
+        // Chuyển đổi sang số ngày
+        int diffInDays = (int) (diffInMillies / (24 * 60 * 60 * 1000));
+        
+        // Nếu thuê trong cùng một ngày, tính là 1 ngày
+        return Math.max(1, diffInDays);
+    }
 }

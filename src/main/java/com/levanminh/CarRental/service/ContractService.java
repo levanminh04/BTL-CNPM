@@ -51,12 +51,10 @@ public class ContractService {
             
             Contract contract = contractOpt.get();
             
-            // Check if contract is already completed
             if ("COMPLETED".equals(contract.getStatus())) {
                 throw new RuntimeException("Hợp đồng đã được hoàn thành trước đó");
             }
             
-            // 1. Cập nhật trạng thái hợp đồng
             contract.setStatus("COMPLETED");
             contractRepository.save(contract);
             
@@ -117,25 +115,23 @@ public class ContractService {
             invoice.setStatus("PAID");
             invoice.setInvoiceType("LEASE_END");
             
-            // Format payment date to fit within 25 characters - using a shorter format
             try {
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
                 String formattedDate = sdf.format(new Date());
                 
-                // Validate that the formatted date string is within column length constraints (25 chars)
                 if (formattedDate.length() > 25) {
-                    // If still too long, use even shorter format
                     sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
                     formattedDate = sdf.format(new Date());
                 }
                 
                 invoice.setPaymentDate(formattedDate);
             } catch (Exception e) {
-                // Fallback to a safe string if any date formatting error occurs
                 invoice.setPaymentDate(new Date().toString().substring(0, 25));
                 System.err.println("Warning: Error formatting payment date: " + e.getMessage());
             }
-            
+
+
+
             invoice.setDiscountAmount(0f);
             invoice.setUser(currentUser);
             invoice.setContract(contract);
@@ -152,11 +148,9 @@ public class ContractService {
                     System.err.println("Warning: Null contract car found in collection, skipping");
                     continue;
                 }
-                
-                try {
-                    // Ensure we have valid price and days data
+                  try {
                     float pricePerDay = contractCar.getPricePerDay() != null ? contractCar.getPricePerDay() : 0;
-                    int days = contractCar.getEndDate() != null ? contractCar.getEndDate() : 0;
+                    int days = contractCar.getRentalDays();
                     
                     // Phí thuê xe
                     float rentalFee = pricePerDay * days;
@@ -165,7 +159,6 @@ public class ContractService {
                     rentalDetail.setFeeType("RENTAL_FEE");
                     rentalDetail.setFeeAmount(rentalFee);
                     
-                    // Get license plate safely
                     String licensePlate = "Unknown";
                     if (contractCar.getCar() != null && contractCar.getCar().getLicensePlate() != null) {
                         licensePlate = contractCar.getCar().getLicensePlate();

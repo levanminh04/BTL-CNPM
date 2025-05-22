@@ -308,24 +308,24 @@
                     <div class="line-items">
                         <table class="invoice-table">
                             <thead>
-                                <tr>
-                                    <th>Biển Số</th>
+                                <tr>                                    <th>Biển Số</th>
                                     <th>Xe</th>
                                     <th>Ngày Bắt Đầu</th>
+                                    <th>Ngày Kết Thúc</th>
                                     <th>Số Ngày Thuê</th>
                                     <th>Giá/Ngày</th>
                                     <th class="text-right">Thành Tiền</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="contractCar : ${contractCars}">
-                                    <td th:text="${contractCar.car.licensePlate}">30A-12345</td>
+                                <tr th:each="contractCar : ${contractCars}">                                    <td th:text="${contractCar.car.licensePlate}">30A-12345</td>
                                     <td th:text="${contractCar.car.brand + ' ' + contractCar.car.model}">Toyota Camry</td>
                                     <td th:text="${#dates.format(contractCar.startDate, 'dd/MM/yyyy')}">01/05/2025</td>
-                                    <td th:text="${contractCar.endDate}">7</td>
+                                    <td th:text="${#dates.format(contractCar.endDate, 'dd/MM/yyyy')}">08/05/2025</td>
+                                    <td th:text="${contractCar.rentalDays}">7</td>
                                     <td th:text="${#numbers.formatDecimal(contractCar.pricePerDay, 0, 'POINT', 0, 'COMMA') + ' VND'}">500,000 VND</td>
                                     <td class="text-right" 
-                                        th:text="${#numbers.formatDecimal(contractCar.pricePerDay * contractCar.endDate, 0, 'POINT', 0, 'COMMA') + ' VND'}">
+                                        th:text="${#numbers.formatDecimal(contractCar.pricePerDay * contractCar.rentalDays, 0, 'POINT', 0, 'COMMA') + ' VND'}">
                                         3,500,000 VND
                                     </td>
                                 </tr>

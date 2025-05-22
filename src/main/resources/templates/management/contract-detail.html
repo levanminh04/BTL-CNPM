@@ -342,11 +342,11 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Biển Số</th>
+                            <tr>                                <th>Biển Số</th>
                                 <th>Hãng</th>
                                 <th>Model</th>
                                 <th>Ngày Bắt Đầu</th>
+                                <th>Ngày Kết Thúc</th>
                                 <th>Số Ngày Thuê</th>
                                 <th>Giá/Ngày</th>
                                 <th>Trạng Thái</th>
@@ -357,9 +357,9 @@
                             <tr th:each="contractCar : ${contractCars}">
                                 <td th:text="${contractCar.car.licensePlate}">30A-12345</td>
                                 <td th:text="${contractCar.car.brand}">Toyota</td>
-                                <td th:text="${contractCar.car.model}">Camry</td>
-                                <td th:text="${#dates.format(contractCar.startDate, 'dd/MM/yyyy')}">01/05/2025</td>
-                                <td th:text="${contractCar.endDate}">7</td>
+                                <td th:text="${contractCar.car.model}">Camry</td>                                <td th:text="${#dates.format(contractCar.startDate, 'dd/MM/yyyy')}">01/05/2025</td>
+                                <td th:text="${#dates.format(contractCar.endDate, 'dd/MM/yyyy')}">08/05/2025</td>
+                                <td th:text="${contractCar.rentalDays}">7</td>
                                 <td th:text="${contractCar.pricePerDay}">500000</td>                                <td th:text="${contractCar.car.status}">RENTED</td>                                <td>
                                     <button class="btn damage-btn" 
                                             th:data-contract-car-id="${contractCar.id}" 
